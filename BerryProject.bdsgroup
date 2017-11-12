@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<PersonalityInfo>
+		<Option>
+			<Option Name="Personality">Default.Personality</Option>
+			<Option Name="ProjectType"></Option>
+			<Option Name="Version">1.0</Option>
+			<Option Name="GUID">{F537CCDA-4DD7-42F0-9768-D24169938772}</Option>
+		</Option>
+	</PersonalityInfo>
+	<Default.Personality>  <Projects>
+      <Projects Name="Setup.exe">Setup.bdsproj</Projects>
+      <Projects Name="ENU\..\Setup.ENU">ENU\Setup.bdsproj</Projects>
+      <Projects Name="Targets">Setup.exe ENU\..\Setup.ENU</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+</BorlandProject>

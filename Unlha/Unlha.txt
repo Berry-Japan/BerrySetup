@@ -1,0 +1,1 @@
+  //Button1.Caption := 'UNLHA32 Version : ' + IntToStr(integer(UnlhaGetVersion));
