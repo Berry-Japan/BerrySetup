@@ -3,5 +3,9 @@
 	<Transactions>
     <Transaction>2007/09/14 16:39:01.640.PAS,D:\Documents and Settings\Yui\My Documents\Borland Studio Projects\BerrySetup-0.84\DEZIP.PAS=</Transaction>
     <Transaction>2007/09/14 16:43:35.734.PAS,D:\Documents and Settings\Yui\My Documents\Borland Studio Projects\BerrySetup-0.84\DEZIP.PAS=</Transaction>
+    <Transaction>2007/10/31 14:22:19.984.pas,D:\Documents and Settings\Yui\My Documents\Borland Studio Projects\使ったの\diskacc\int13ext.pas=</Transaction>
+    <Transaction>2007/10/31 14:22:23.671.vxd,D:\Documents and Settings\Yui\My Documents\Borland Studio Projects\使ったの\diskacc\int13ext.vxd=</Transaction>
+    <Transaction>2007/10/31 16:49:33.609.vxd,D:\Documents and Settings\Yui\My Documents\Borland Studio Projects\BerrySetup-0.85\int13ext.vxd=</Transaction>
+    <Transaction>2007/10/31 17:24:51.734.pas,D:\Documents and Settings\Yui\My Documents\Borland Studio Projects\BerrySetup-0.85\int13ext.pas=</Transaction>
   </Transactions>
 </BorlandProject>

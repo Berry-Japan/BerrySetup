@@ -83,11 +83,57 @@ const
 
 implementation
 
-uses Unit2, Unit3, ZipTypes, Unzip;
+uses Unit2, Unit3, ZipTypes, Unzip, BlockDev;
 
 {$R *.dfm}
 
 // âìÄä÷òA
+var
+  Phya: TNTDisk;
+  WriteBuff: array [0..512] of char;
+  Position, c, n: Integer;
+procedure WritePartition(var h:File; var p:pchar; count:Integer; var written:Integer);
+begin
+  case count of
+  -1:   // ç≈èâÇÃèàóù
+  begin
+    Phya := TNTDisk.Create;
+    Phya.SetFileName('\\.\G:');
+    Phya.SetMode(True);
+    Phya.Open;
+    Position := 0;
+  end;
+  0:    // èIóπèàóù
+  begin
+    if Position<>0 then
+      Phya.WritePhysicalDisk(@WriteBuff, 1);
+    Phya.Close;
+    Phya.Free;
+    Position := 0;
+  end;
+  else  // èëÇ´çûÇ›
+  begin
+    written := count;
+    if (Position+count)>512 then
+    begin
+      n := 512-Position;
+      CopyMemory(@WriteBuff[Position], p, n);
+      count := count - n;
+      Phya.WritePhysicalDisk(@WriteBuff, 1);
+      c := count div 512;
+      Phya.WritePhysicalDisk(pchar(@p[n]), c);
+      Position := count - c*512;
+      CopyMemory(@WriteBuff, @p[n+c*512], Position);
+    end
+    else
+      CopyMemory(@WriteBuff[Position], p, count);
+  end;
+  end;
+
+  {if count<>0 then
+    blockwrite(h, p[0], count, written);}
+end;
+
 procedure TForm1.WMCommand(var msg: TMessage);
 var ppercent:^word;
 begin
@@ -167,8 +213,9 @@ begin
           //FileUnzip(PAnsiChar(str1 + '\berry.zip'), PAnsiChar(str2), '*.*', nil, nil);
           rc := getfirstinzip(PAnsiChar(str1+'\berry.zip'), r);
           while rc = unzip_ok do begin
-            rc := unzipfile(PAnsiChar(str1+'\berry.zip'), PAnsiChar(str2+'\'+r.filename), r.headeroffset, self.Handle, cm_showpercent);
-//            rc := unzipfile(PAnsiChar(str1+'\berry.zip'), PAnsiChar(str2+'\'+r.filename), r.headeroffset, Form1.Handle, cm_showpercent);
+            //rc := unzipfile(PAnsiChar(str1+'\berry.zip'), PAnsiChar(str2+'\'+r.filename), r.headeroffset, self.Handle, cm_showpercent);
+            rc := unzipfile(PAnsiChar(str1+'\berry.zip'), PAnsiChar(str2+'\'+r.filename), r.headeroffset, self.Handle, cm_showpercent, WritePartition);
+            //rc := unzipfile(PAnsiChar(str1+'\berry.zip'), PAnsiChar(str2+'\'+r.filename), r.headeroffset, Form1.Handle, cm_showpercent);
             if (rc = unzip_ReadErr) or (rc = unzip_Userabort) or
                (rc = unzip_InUse)   or (rc = unzip_ZipFileErr) then
               rc := unzip_SeriousError {Serious error, force abort}

@@ -9,7 +9,9 @@ uses
   Unit3 in 'Unit3.pas' {Form3},
   unzip in 'unzip.pas',
   ziptypes in 'ziptypes.pas',
-  ProgressDialog in 'ProgressDialog.pas';
+  ProgressDialog in 'ProgressDialog.pas',
+  BlockDev in 'BlockDev.pas',
+  WinIOCTL in 'WinIOCTL.pas';
 
 {$R *.res}
 

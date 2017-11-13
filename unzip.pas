@@ -302,7 +302,7 @@ FUNCTION GetSupportedMethods : longint;
 {bit 8=1 -> Format 8 supported, etc.}
 
 FUNCTION UnzipFile
-( in_name : pchar;out_name : pchar;offset : longint;hFileAction : word;cm_index : integer ) : integer;
+( in_name : pchar; out_name : pchar; offset : longint; hFileAction : word; cm_index : integer; func : UnzipWriteProc = NIL ) : integer;
 {$ifdef USE_STDCALL}STDCALL;{$else USE_STDCALL}{$ifndef NO_EXPORTS}EXPORT;{$endif NO_EXPORTS}{$endif USE_STDCALL}
 {usage:
  in_name:      name of zip file with full path
@@ -393,6 +393,7 @@ ZipReport     : UnzipReportProc;      {Global Status Report Callback}
 ZipQuestion   : UnzipQuestionProc;    {Global "Question" Callback}
 ZipRec        : TReportRec;           {Global ZIP record for callbacks}
 NoRecurseDirs : Boolean;              {Global Recurse variable}
+ZipWrite      : UnzipWriteProc;       {Global Write Callback}
 
 CONST fmOpenRead       = $0000;
 CONST fmOpenWrite      = $0001;
@@ -1147,7 +1148,10 @@ b : boolean;
 BEGIN
   {$I-}
   // ファイルへ書く
-  blockwrite ( outfile, slide [ 0 ], w, n );
+  IF @ZipWrite <> NIL THEN
+    ZipWrite(outfile, {data}slide, {len}w, {ret}n)
+  ELSE
+    blockwrite ( outfile, {data}slide [ 0 ], {len}w, {ret}n );
   {$I+}
   b := ( n = w ) AND ( ioresult = 0 );  {True-> alles ok}
   UpdateCRC ( iobuf ( piobuf ( @slide [ 0 ] ) ^ ), w );
@@ -2875,6 +2879,13 @@ BEGIN
   {$I+}
   err := ioresult;
 
+  // メモリーへ書く
+  IF @func <> NIL THEN BEGIN
+    ZipWrite := func;
+    ZipWrite(outfile, {data}slide, {len}-1, {ret}aResult);
+    {$i-}erase ( outfile ); {$i+}
+  END;
+
   {create directories not yet in path}
   ConvertPath ( out_name );
   isadir := ( out_name [ strlen ( out_name ) - 1 ] = OS_Path_Separator );
@@ -3004,7 +3015,11 @@ BEGIN
     aResult := unzip_NotSupported;
    END;
   END;
-  unzipfile := aResult;
+  unzipfile := aResult;     // 解凍結果
+
+  // バッファ書き出し
+  IF @ZipWrite <> NIL THEN
+    ZipWrite(outfile, {data}slide, {len}0, {ret}aResult);
 
   IF ( aResult = unzip_ok ) AND ( ( hufttype AND 8 ) <> 0 )
   THEN BEGIN {CRC at the end}
@@ -3025,15 +3040,18 @@ BEGIN
 
   IF aResult <> 0
   THEN BEGIN
+    // 失敗
     {$i-}erase ( outfile ); {$i+}
     IF ioresult <> 0 THEN;
   END
   ELSE IF ( originalcrc <> crc32val )
   THEN BEGIN
+    // 失敗
     unzipfile := unzip_CRCErr;
     {$i-}erase ( outfile ); {$i+}
     IF ioresult <> 0 THEN;
   END ELSE BEGIN
+    // 成功
     oldpercent := 100;       {100 percent}
     {$ifdef MSWINDOWS}
     IF dlghandle <> 0 THEN

@@ -118,6 +118,8 @@ unzip_completed  = - 1005;  {completed this ZIP file}
 
 { procedural types for callbacks }
 TYPE
+//pUnzipWriteProc = ^UnzipWriteProc;
+UnzipWriteProc   = PROCEDURE (var h:File; var p:pchar; count:Integer; var written:Integer);
 pUnzipReportProc = ^UnzipReportProc;
 {$ifdef __TMT__}
 {$W-}

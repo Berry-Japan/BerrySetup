@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 352
-  Top = 264
+  Left = 256
+  Top = 230
   AlphaBlend = True
   AlphaBlendValue = 210
   BorderIcons = []
@@ -15,7 +15,7 @@ object Form1: TForm1
   Font.Name = #65325#65331' '#65328#12468#12471#12483#12463
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poDesigned
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
