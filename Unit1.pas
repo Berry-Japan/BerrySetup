@@ -29,6 +29,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure Button8Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     { Private 宣言 }
     procedure CopyFiles(fFrom, fTo : String);
@@ -525,6 +527,8 @@ procedure TForm1.FormCreate(Sender: TObject);
 var
   info: OSVERSIONINFO;
 begin
+  KeyPreview := True;
+
   // OSチェック
   Error := False;
 
@@ -732,6 +736,12 @@ begin
        Button6.Enabled := false;
     SetMenu;
   end;
+end;
+
+procedure TForm1.FormKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+        if key=VK_ESCAPE then form1.Close;
 end;
 
 end.
