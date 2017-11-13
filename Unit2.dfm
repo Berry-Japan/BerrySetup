@@ -8,7 +8,7 @@ object Form2: TForm2
   Caption = #12487#12540#12479#38936#22495#20316#25104
   ClientHeight = 180
   ClientWidth = 474
-  Color = clInfoBk
+  Color = clCream
   Font.Charset = SHIFTJIS_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
@@ -106,8 +106,13 @@ object Form2: TForm2
     Height = 25
     Max = 100
     Min = 100
+    Orientation = trHorizontal
+    Frequency = 1
     Position = 100
+    SelEnd = 0
+    SelStart = 0
     TabOrder = 1
+    TickMarks = tmBottomRight
     TickStyle = tsNone
     OnChange = TrackBar1Change
     OnKeyPress = TrackBar1KeyPress
@@ -130,6 +135,8 @@ object Form2: TForm2
     Top = 120
     Width = 433
     Height = 16
+    Min = 0
+    Max = 100
     TabOrder = 4
   end
   object Button2: TButton

@@ -57,16 +57,58 @@ var
   tpd: TProgressDialog;
   UserPressedAbort: Boolean;
 
-  const OSButtonLabel : array[0..2] of String = (
-   'Berry OS のアンインストール',
-   'Berry OS のインストール（640MB の空きが必要）',
-   'Berry OS のインストール'
+  const OSButtonLabel : array[0..1,0..2] of String = (
+	('Berry OS のアンインストール',
+	'Berry OS のインストール (640MB の空きが必要)',
+	'Berry OS のインストール'),
+	('Uninstall Berry OS',
+	'Install Berry OS (needs 640MB space)',
+	'Install Berry OS')
   );
 
-  const GRUBButtonLabel : array[0..2] of String = (
-    'ブートローダの削除 (NTLDR)',
-    'ブートローダの追加（5MB の空きが必要）',
-    'ブートローダの追加 (NTLDR)'
+  const GRUBButtonLabel : array[0..1,0..2] of String = (
+	('ブートローダの削除 (NTLDR)',
+	'ブートローダの追加（5MB の空きが必要）',
+	'ブートローダの追加 (NTLDR)'),
+	('Remove the bootloader from NTLDR',
+	'Add the bootloader (needs 5MB space)',
+	'Add the bootloader to NTLDR')
+  );
+
+  const sForm : array[0..1,0..5] of String = (
+	('データ領域の作成',
+	'スワップ領域の作成',
+	'Berry OS を USB メモリーにインストール',
+	'終了',
+	'ドライブの検索',
+	'インストール先:'),
+	('Make a data space',
+	'Make a swap space',
+	'Install Berry OS to USB key',
+	'Quit',
+	'Search drives',
+	'Install to :')
+  );
+  const sMsg : array[0..9] of String = (
+	' から ',
+	' へ',
+	'Berry OS のデータ領域を作成します。',
+	'データ領域',
+	'Berry OS のスワップ領域を作成します。',
+	'スワップ領域',
+	'syslinux実行中にエラーが発生しました。FATでフォーマットされているか確認してください。',
+	'申し訳ありません。ブートローダの追加は Windows 95/98/Me には対応していません。',
+	'インストールに成功しました。Berry OSを使用してくださりありがとうございます。',
+	'コピーしています...'
+  );
+  const sDtype : array[0..6] of String = (
+	'未知',
+	'存在しません',
+	'リムーバブル ディスク',
+	'ローカル ディスク',
+	'ネットワーク ドライブ',
+	'CD/DVD ドライブ',
+	'RAM'
   );
 
 const
@@ -74,11 +116,11 @@ const
   GRUBArea = 5;
   OSSource = 'BERRY';   // BERRYディレクトリ
   GRUBSource = 'Setup'; // Setupディレクトリ
-  OSDest = 'BERRY';     // インストール先ディレクトリ
-  GRUBDest = 'BERRY';   // インストール先ディレクトリ
-  strOSError = '申し訳ありません。ブートローダの追加は Windows 95/98/Me には対応していません。';
-  strComplete = 'インストールに成功しました。';
-  strUnpack = 'コピーしています...';
+  OSDest = 'berry';     // インストール先ディレクトリ
+  GRUBDest = 'berry';   // インストール先ディレクトリ
+  //strOSError = '申し訳ありません。ブートローダの追加は Windows 95/98/Me には対応していません。';
+  //strComplete = 'インストールに成功しました。Berry OSを使用してくださりありがとうございます。';
+  //strUnpack = 'コピーしています...';
   cm_showpercent = $1070;  // 解凍関連
 
 implementation
@@ -200,9 +242,11 @@ begin
         if FileExists(str1 + '\berry.zip') then begin
           // 圧縮ファイルを解凍
           tpd := TProgressDialog.Create(self);
-          tpd.Title := strUnpack;
+          //tpd.Title := strUnpack;
+          tpd.Title := sMsg[9];
           //tpd.TextLine1 := 'berry.zip';
-          tpd.TextLine2 := char($27)+str1+char($27)+' から '+char($27)+str2+char($27)+' へ';
+          //tpd.TextLine2 := char($27)+str1+char($27)+' から '+char($27)+str2+char($27)+' へ';
+          tpd.TextLine2 := char($27)+str1+char($27)+sMsg[0]+char($27)+str2+char($27)+sMsg[1];
           tpd.CommonAVI := aviCopyFiles;
           tpd.Max := 100;
           tpd.Position := 0;
@@ -312,7 +356,7 @@ begin
     begin
       // 存在する＝論理積が0ではない時リストに追加
       if (Ret and(1 shl i)) <> 0 then
-      begin                    
+      begin
         drive := Char(Ord('A') + i) + ':\';
         kind := GetDriveType(PChar(drive));
         //if kind = DRIVE_FIXED then
@@ -328,8 +372,10 @@ begin
     //ComboBox1.ItemIndex := 0;
     ComboBox1.OnChange(Self);
     ProgressBar1.Position := 0;
-    Label3.Caption := 'Berry OS のデータ領域を作成します。';
-    Label5.Caption := 'データ領域';
+    //Label3.Caption := 'Berry OS のデータ領域を作成します。';
+    //Label5.Caption := 'データ領域';
+    Label3.Caption := sMsg[2];
+    Label5.Caption := sMsg[3];
     ShowModal;
   end;
   SetMenu;
@@ -370,8 +416,10 @@ begin
     end;
     ComboBox1.OnChange(Self);
     ProgressBar1.Position := 0;
-    Label3.Caption := 'Berry OS のスワップ領域を作成します。';
-    Label5.Caption := 'スワップ領域';
+    //Label3.Caption := 'Berry OS のスワップ領域を作成します。';
+    //Label5.Caption := 'スワップ領域';
+    Label3.Caption := sMsg[4];
+    Label5.Caption := sMsg[5];
     ShowModal;
   end;
   SetMenu;
@@ -383,6 +431,9 @@ var
   from :String;
   dest :String;
   options :String;
+  sei :SHELLEXECUTEINFO;
+  //Result :Cardinal;
+  Result :LongBool;
 begin
   DisableButton;
 
@@ -394,20 +445,42 @@ begin
     CopyFiles(from, dest);
     // カーネル
     from := AppDir + GRUBSource + '\vmlinuz';
-    dest := DstDrive + '\';
-    CopyFiles(from, dest);
-    from := AppDir + GRUBSource + '\initrd.gz';
-    dest := DstDrive + '\';
-    CopyFiles(from, dest);
-    // SysLinux
-    //from := AppDir + '1280x1024.cfg';
-    from := AppDir + GRUBSource + '\syslinux.cfg';
-    dest := DstDrive + '\syslinux.cfg';
+    dest := DstDrive + '\' + OSDest + '\vmlinuz';
     CopyFile(PChar(from), PChar(dest), FALSE);
-    options := '-ma ' + DstDrive;
-    ShellExecute(0, 'open', PChar(AppDir + GRUBSource + '\syslinux.exe'), PChar(options), nil, SW_HIDE);
-
-    MessageDlg(strComplete, mtInformation, [mbOk], 0);
+    from := AppDir + GRUBSource + '\initrd.gz';
+    dest := DstDrive + '\' + OSDest + '\initrd.gz';
+    CopyFile(PChar(from), PChar(dest), FALSE);
+    // SysLinux
+    from := AppDir + GRUBSource + '\syslinux.cfg';
+    dest := DstDrive + '\syslinux.cfg'; // ルートだけ
+    CopyFile(PChar(from), PChar(dest), FALSE);
+    from := AppDir + GRUBSource + '\vesamenu.c32';
+    dest := DstDrive + '\' + OSDest + '\vesamenu.c32';
+    CopyFile(PChar(from), PChar(dest), FALSE);
+    from := AppDir + GRUBSource + '\splash.jpg';
+    dest := DstDrive + '\' + OSDest + '\splash.jpg';
+    CopyFile(PChar(from), PChar(dest), FALSE);
+    options := '-ma ' + DstDrive + ' -d ' + '\' + OSDest;
+    //ShellExecute(0, 'open', PChar(AppDir + GRUBSource + '\syslinux.exe'), PChar(options), nil, SW_HIDE);
+    ZeroMemory(@sei, sizeof(SHELLEXECUTEINFO));
+    sei.cbSize := sizeof(SHELLEXECUTEINFO);
+    sei.Wnd := 0;
+    sei.nShow := SW_HIDE;
+    // このパラメータが重要で、セットしないとSHELLEXECUTEINFO構造体のhProcessメンバがセットされない。
+    sei.fMask := SEE_MASK_NOCLOSEPROCESS;
+    sei.lpFile := PChar(AppDir + GRUBSource + '\syslinux.exe');
+    sei.lpParameters := PChar(options);
+    Result := ShellExecuteEx(@sei);
+    //GetExitCodeProcess(sei.hProcess, Result);
+    //WaitForSingleObject(sei.hProcess, INFINITE);
+    if not Result then
+    begin
+        //MessageDlg('syslinux実行中にエラーが発生しました。FATでフォーマットされているか確認してください。', mtInformation, [mbOk], 0)
+        MessageDlg(sMsg[6], mtInformation, [mbOk], 0)
+    end else begin
+        //MessageDlg(strComplete, mtInformation, [mbOk], 0);
+        MessageDlg(sMsg[8], mtInformation, [mbOk], 0);
+    end;
   end;
   SetMenu;
 end;
@@ -483,7 +556,17 @@ begin
 
   // 言語
   LangID := GetUserDefaultLangID;
-  //Label2.Caption := LangID;
+  if LangID = 1041 then
+        LangID := 0
+  else
+        LangID := 1;
+//        LangID := 1;
+  Button4.Caption := sForm[LangID][0];
+  Button5.Caption := sForm[LangID][1];
+  Button6.Caption := sForm[LangID][2];
+  Button7.Caption := sForm[LangID][3];
+  Button8.Caption := sForm[LangID][4];
+  Label1.Caption := sForm[LangID][5];
 
   SetMenu;
 end;
@@ -528,7 +611,7 @@ begin
       btnindex := 2;
     end;
   end;
-  Button1.Caption := OSButtonLabel[btnindex];
+  Button1.Caption := OSButtonLabel[LangID][btnindex];
 
   //btnindex := 0;
   {if IsGRUB then
@@ -548,7 +631,7 @@ begin
       btnindex := 2;
     end;
   //end;
-  Button2.Caption := GRUBButtonLabel[btnindex];
+  Button2.Caption := GRUBButtonLabel[LangID][btnindex];
 
   if IsNTLDR then
   begin
@@ -585,7 +668,8 @@ procedure TForm1.FormShow(Sender: TObject);
 begin
   if Error then
   begin
-     MessageDlg(strOSError, mtInformation, [mbOk], 0);
+     //MessageDlg(strOSError, mtInformation, [mbOk], 0);
+     MessageDlg(sMsg[7], mtInformation, [mbOk], 0);
      //Close;
   end;
 end;
@@ -610,17 +694,21 @@ begin
     drvname := Char(Ord('A') + i) + ':\';
     Ret := GetDriveType(PChar(drvname));
 
-    Case Ret of
-      0 : dtype := '未知';
-      1 : dtype := '存在しません';
-      2 : dtype := 'リムーバブル ディスク';
-      3 : dtype := 'ローカル ディスク';
-      4 : dtype := 'ネットワーク ドライブ';
-      5 : dtype := 'CD/DVD ドライブ';
-      6 : dtype := 'RAM';
-      else
+    //Case Ret of
+      //0 : dtype := '未知';
+      //1 : dtype := '存在しません';
+      //2 : dtype := 'リムーバブル ディスク';
+      //3 : dtype := 'ローカル ディスク';
+      //4 : dtype := 'ネットワーク ドライブ';
+      //5 : dtype := 'CD/DVD ドライブ';
+      //6 : dtype := 'RAM';
+      //else
+        //dtype := IntToStr(Ret);
+    //end;
+    if (Ret >= 0) and (Ret <=6) then
+        dtype := sDtype[Ret]
+    else
         dtype := IntToStr(Ret);
-    end;
 
     if Ret <> 1 then
     begin
